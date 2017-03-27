@@ -1,0 +1,48 @@
+stages:
+  - test
+  - deploy
+
+before_script:
+  - if [ -z "$CI_BUILD_TAG" ]; then export CI_BUILD_TAG=$CI_DEFAULT_BUILD_TAG; fi
+  - export parser=(${CI_BUILD_TAG//-/ })
+  - sed -i s/CERN_VERSION_PLACEHOLDER/${parser[0]}/g openstack-ironic.spec
+  - sed -i s/CERN_RELEASE_PLACEHOLDER/${parser[1]}/g openstack-ironic.spec
+  - python setup.py egg_info
+  - cp ironic.egg-info/PKG-INFO .
+
+flake8:
+  stage: test
+  image: docker.io/python:2.7
+  before_script:
+    - echo true
+  except:
+    - tags
+  script:
+    - cd $CI_PROJECT_DIR
+    - pip install flake8
+    - bash tools/flake8wrap.sh -HEAD
+
+rpmbuild:
+  stage: test
+  image: gitlab-registry.cern.ch/cloud-infrastructure/cci-scripts/rpm-builder:rocky
+  except:
+    - tags
+  script:
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/rpmbuild.sh | bash
+
+kojicheck:
+  stage: deploy
+  image: gitlab-registry.cern.ch/cloud-infrastructure/cci-scripts/rpm-builder:rocky
+  only:
+    - tags
+  script:
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojicheck.sh | bash
+
+kojibuild:
+  stage: deploy
+  image: gitlab-registry.cern.ch/cloud-infrastructure/cci-scripts/rpm-builder:rocky
+  only:
+    - tags
+  script:
+    - export DIST='.el7.cern'
+    - curl https://gitlab.cern.ch/cloud-infrastructure/cloud-dev/raw/master/gitlab/kojibuild.sh | bash
