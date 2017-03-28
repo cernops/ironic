@@ -520,6 +520,12 @@ class PXEBoot(base.BootInterface):
         node = task.node
         mode = deploy_utils.rescue_or_deploy_mode(node)
 
+        # Register machine in AIMS for booting from deploy image
+        from ironic.drivers.modules.cern import aims
+        aims.AIMSManager.register_node(node,
+                                       CONF.cern.deploy_image_name,
+                                       "conductor")
+
         if CONF.pxe.ipxe_enabled:
             # NOTE(mjturek): At this point, the ipxe boot script should
             # already exist as it is created at startup time. However, we

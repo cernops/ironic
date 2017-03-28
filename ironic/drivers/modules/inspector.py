@@ -109,6 +109,12 @@ class Inspector(base.InspectInterface):
         LOG.debug('Starting inspection for node %(uuid)s using '
                   'ironic-inspector', {'uuid': task.node.uuid})
 
+        # Register machine in AIMS for booting from deploy image
+        from ironic.drivers.modules.cern import aims
+        aims.AIMSManager.register_node(task.node,
+                                       CONF.cern.deploy_image_name,
+                                       "inspector")
+
         # NOTE(dtantsur): we're spawning a short-living green thread so that
         # we can release a lock as soon as possible and allow ironic-inspector
         # to operate on a node.

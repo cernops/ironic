@@ -20,6 +20,7 @@ from ironic.conf import ansible
 from ironic.conf import api
 from ironic.conf import audit
 from ironic.conf import cinder
+from ironic.conf import cern
 from ironic.conf import cisco
 from ironic.conf import conductor
 from ironic.conf import console
@@ -53,6 +54,7 @@ ansible.register_opts(CONF)
 api.register_opts(CONF)
 audit.register_opts(CONF)
 cinder.register_opts(CONF)
+cern.register_opts(CONF)
 cisco.register_opts(CONF)
 conductor.register_opts(CONF)
 console.register_opts(CONF)
