@@ -716,13 +716,27 @@ class AgentDeployMixin(HeartbeatMixin):
             on encountering error while setting the boot device on the node.
         """
         node = task.node
-        LOG.debug('Configuring local boot for node %s', node.uuid)
-        if not node.driver_internal_info.get(
-                'is_whole_disk_image') and root_uuid:
-            LOG.debug('Installing the bootloader for node %(node)s on '
-                      'partition %(part)s, EFI system partition %(efi)s',
-                      {'node': node.uuid, 'part': root_uuid,
-                       'efi': efi_system_part_uuid})
+        LOG.info('Configuring local boot for node %s', node.uuid)
+
+        # NOTE(arne): If the node has a target_raid_config, it signifies a
+        # software RAID shall be deployed. This requires grub to be installed
+        # on the corresponding holder disks.
+        internal_info = node.driver_internal_info
+        if node.target_raid_config:
+            LOG.info('Node %s has a target raid config', node.uuid)
+            cern_software_raid = True
+            root_uuid = internal_info.get('root_uuid_or_disk_id')
+        else:
+            cern_software_raid = False
+            LOG.info('Node %s does not have a target raid config', node.uuid)
+
+        whole_disk_image = internal_info.get('is_whole_disk_image')
+
+        if root_uuid and not whole_disk_image or cern_software_raid:
+            LOG.info('Installing the bootloader for node %(node)s on '
+                     'partition %(part)s, EFI system partition %(efi)s',
+                     {'node': node.uuid, 'part': root_uuid,
+                      'efi': efi_system_part_uuid})
             result = self._client.install_bootloader(
                 node, root_uuid=root_uuid,
                 efi_system_part_uuid=efi_system_part_uuid,
