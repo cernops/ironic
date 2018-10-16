@@ -19,6 +19,9 @@ from ironic.drivers.modules import ipmitool
 from ironic.drivers.modules import noop
 from ironic.drivers.modules import noop_mgmt
 
+from ironic.drivers.modules.cern import webconsole
+from ironic.drivers.modules.cern import ipmi as cernipmi
+
 
 class IPMIHardware(generic.GenericHardware):
     """IPMI hardware type.
@@ -31,12 +34,13 @@ class IPMIHardware(generic.GenericHardware):
     def supported_console_interfaces(self):
         """List of supported console interfaces."""
         return [ipmitool.IPMISocatConsole, ipmitool.IPMIShellinaboxConsole,
-                noop.NoConsole]
+                noop.NoConsole, webconsole.CernWebConsole]
 
     @property
     def supported_management_interfaces(self):
         """List of supported management interfaces."""
-        return [ipmitool.IPMIManagement, noop_mgmt.NoopManagement]
+        return [ipmitool.IPMIManagement, noop_mgmt.NoopManagement,
+                cernipmi.CernIPMIManagement]
 
     @property
     def supported_power_interfaces(self):
